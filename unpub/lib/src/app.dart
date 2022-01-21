@@ -3,15 +3,18 @@ import 'dart:io';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
-import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
-import 'package:googleapis/oauth2/v2.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:pub_semver/pub_semver.dart' as semver;
 import 'package:archive/archive.dart';
+import 'package:unpub/src/auth/providers/token/token_auth_provider.dart';
+import 'package:unpub/src/middlewares/auth_middleware.dart';
+import 'package:unpub/src/auth/providers/auth_provider.dart';
+import 'package:unpub/src/auth/route_auth.dart';
+import 'package:unpub/src/auth/route_auth_finder.dart';
+import 'package:unpub/src/extensions.dart';
 import 'package:unpub/src/models.dart';
 import 'package:unpub/unpub_api/lib/models.dart';
 import 'package:unpub/src/meta_store.dart';
@@ -29,12 +32,14 @@ class App {
   /// package(tarball) store
   final PackageStore packageStore;
 
+  /// auth provider (for web related stuff)
+  final AuthProvider authProvider;
+
+  /// token auth provider (for API access)
+  final AuthProvider tokenAuthProvider;
+
   /// upstream url, default: https://pub.dev
   final String upstream;
-
-  /// http(s) proxy to call googleapis (to get uploader email)
-  final String? googleapisProxy;
-  final String? overrideUploaderEmail;
 
   /// validate if the package can be published
   ///
@@ -45,9 +50,9 @@ class App {
   App({
     required this.metaStore,
     required this.packageStore,
+    required this.authProvider,
+    required this.tokenAuthProvider,
     this.upstream = 'https://pub.dev',
-    this.googleapisProxy,
-    this.overrideUploaderEmail,
     this.uploadValidator,
   });
 
@@ -74,36 +79,17 @@ class App {
         }),
       );
 
-  http.Client? _googleapisClient;
+  Future<HttpServer> serve(
+      [String? host = '0.0.0.0',
+      int port = 4000,
+      bool strictAuth = false]) async {
+    final routeOptions = findRouteAuthsFromDeclarations(App);
 
-  Future<String> _getUploaderEmail(shelf.Request req) async {
-    if (overrideUploaderEmail != null) return overrideUploaderEmail!;
-
-    var authHeader = req.headers[HttpHeaders.authorizationHeader];
-    if (authHeader == null) throw 'missing authorization header';
-
-    var token = authHeader.split(' ').last;
-
-    if (_googleapisClient == null) {
-      if (googleapisProxy != null) {
-        _googleapisClient = IOClient(HttpClient()
-          ..findProxy = (url) => HttpClient.findProxyFromEnvironment(url,
-              environment: {"https_proxy": googleapisProxy!}));
-      } else {
-        _googleapisClient = http.Client();
-      }
-    }
-
-    var info =
-        await Oauth2Api(_googleapisClient!).tokeninfo(accessToken: token);
-    if (info.email == null) throw 'fail to get google account email';
-    return info.email!;
-  }
-
-  Future<HttpServer> serve([String? host = '0.0.0.0', int port = 4000]) async {
     var handler = const shelf.Pipeline()
         .addMiddleware(corsHeaders())
         .addMiddleware(shelf.logRequests())
+        .addMiddleware(authMiddleware(authProvider, tokenAuthProvider,
+            strictAuth: strictAuth, routeOptions: routeOptions))
         .addHandler((req) async {
       // Return 404 by default
       // https://github.com/google/dart-neats/issues/1
@@ -134,11 +120,13 @@ class App {
 
   Router get router => _$AppRouter(this);
 
+  @Auth.configurable
   @Route.get('/api/packages/<name>')
   Future<shelf.Response> getVersions(shelf.Request req, String name) async {
     var package = await metaStore.queryPackage(name);
 
     if (package == null) {
+      return shelf.Response.notFound(''); // TODO(leoshusar): remove
       return shelf.Response.found(
           Uri.parse(upstream).resolve('/api/packages/$name').toString());
     }
@@ -159,6 +147,7 @@ class App {
     });
   }
 
+  @Auth.configurable
   @Route.get('/api/packages/<name>/versions/<version>')
   Future<shelf.Response> getVersion(
       shelf.Request req, String name, String version) async {
@@ -171,6 +160,7 @@ class App {
 
     var package = await metaStore.queryPackage(name);
     if (package == null) {
+      return shelf.Response.notFound(''); // TODO(leoshusar): remove
       return shelf.Response.found(Uri.parse(upstream)
           .resolve('/api/packages/$name/versions/$version')
           .toString());
@@ -185,11 +175,13 @@ class App {
     return _okWithJson(_versionToJson(packageVersion, req.requestedUri));
   }
 
+  @Auth.anonymous
   @Route.get('/packages/<name>/versions/<version>.tar.gz')
   Future<shelf.Response> download(
       shelf.Request req, String name, String version) async {
     var package = await metaStore.queryPackage(name);
     if (package == null) {
+      return shelf.Response.notFound(''); // TODO(leoshusar): remove
       return shelf.Response.found(Uri.parse(upstream)
           .resolve('/packages/$name/versions/$version.tar.gz')
           .toString());
@@ -209,6 +201,7 @@ class App {
     }
   }
 
+  @Auth.always
   @Route.get('/api/packages/versions/new')
   Future<shelf.Response> getUploadUrl(shelf.Request req) async {
     return _okWithJson({
@@ -219,10 +212,11 @@ class App {
     });
   }
 
+  @Auth.always
   @Route.post('/api/packages/versions/newUpload')
   Future<shelf.Response> upload(shelf.Request req) async {
     try {
-      var uploader = await _getUploaderEmail(req);
+      var uploader = req.authResult.email!;
 
       var contentType = req.headers['content-type'];
       if (contentType == null) throw 'invalid content type';
@@ -336,6 +330,7 @@ class App {
     }
   }
 
+  @Auth.always
   @Route.get('/api/packages/versions/newUploadFinish')
   Future<shelf.Response> uploadFinish(shelf.Request req) async {
     var error = req.requestedUri.queryParameters['error'];
@@ -345,11 +340,12 @@ class App {
     return _successMessage('Successfully uploaded package.');
   }
 
+  @Auth.always
   @Route.post('/api/packages/<name>/uploaders')
   Future<shelf.Response> addUploader(shelf.Request req, String name) async {
     var body = await req.readAsString();
     var email = Uri.splitQueryString(body)['email']!; // TODO: null
-    var operatorEmail = await _getUploaderEmail(req);
+    var operatorEmail = req.authResult.email!;
     var package = await metaStore.queryPackage(name);
 
     if (package?.uploaders?.contains(operatorEmail) == false) {
@@ -363,11 +359,12 @@ class App {
     return _successMessage('uploader added');
   }
 
+  @Auth.always
   @Route.delete('/api/packages/<name>/uploaders/<email>')
   Future<shelf.Response> removeUploader(
       shelf.Request req, String name, String email) async {
     email = Uri.decodeComponent(email);
-    var operatorEmail = await _getUploaderEmail(req);
+    var operatorEmail = req.authResult.email!;
     var package = await metaStore.queryPackage(name);
 
     // TODO: null
@@ -382,6 +379,7 @@ class App {
     return _successMessage('uploader removed');
   }
 
+  @Auth.configurable
   @Route.get('/webapi/packages')
   Future<shelf.Response> getPackages(shelf.Request req) async {
     var params = req.requestedUri.queryParameters;
@@ -426,6 +424,7 @@ class App {
     return _okWithJson({'data': data.toJson()});
   }
 
+  @Auth.configurable
   @Route.get('/webapi/package/<name>/<version>')
   Future<shelf.Response> getPackageDetail(
       shelf.Request req, String name, String version) async {
@@ -488,6 +487,7 @@ class App {
     return _okWithJson({'data': data.toJson()});
   }
 
+  @Auth.anonymous
   @Route.get('/')
   @Route.get('/packages')
   @Route.get('/packages/<name>')
@@ -497,6 +497,7 @@ class App {
         headers: {HttpHeaders.contentTypeHeader: ContentType.html.mimeType});
   }
 
+  @Auth.anonymous
   @Route.get('/main.dart.js')
   Future<shelf.Response> mainDartJs(shelf.Request req) async {
     return shelf.Response.ok(main_dart_js.content,
@@ -518,6 +519,7 @@ class App {
         }).toString();
   }
 
+  @Auth.anonymous
   @Route.get('/badge/<type>/<name>')
   Future<shelf.Response> badge(
       shelf.Request req, String type, String name) async {

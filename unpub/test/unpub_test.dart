@@ -48,16 +48,18 @@ main() {
   group('publish', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
     test('fresh', () async {
       var version = '0.0.1';
-
+      
       var result = await pubPublish(package0, version);
       expect(result.stderr, '');
 
@@ -142,12 +144,14 @@ main() {
   group('get versions', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
       await pubPublish(package0, '0.0.2');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -205,12 +209,14 @@ main() {
   group('get specific version', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
       await pubPublish(package0, '0.0.3+1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -270,11 +276,13 @@ main() {
   group('uploader', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -328,11 +336,12 @@ main() {
 
     group('permission', () {
       setUpAll(() async {
-        await _server.close();
-        _server = await createServer(email1);
+        await pubRemoveToken();
+        await pubAddToken(token('0', email1));
       });
 
       tearDownAll(() async {
+        await pubRemoveToken();
         await _server.close();
       });
 
@@ -351,11 +360,13 @@ main() {
   group('badge', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 

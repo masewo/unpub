@@ -1,0 +1,14 @@
+strict-auth: true
+auth-provider: oidc
+auth-provider-config:
+  google:
+    audiences:
+      - 468492456239-2ckl1u0utih8tsekg0ligcicejbo0nvd.apps.googleusercontent.com
+  oidc:
+    issuer-uri: http://192.168.0.9:8080/auth/realms/test
+    jwt:
+      audiences:
+        - unpub-api
+    # opaque:
+    #   introspection-client-id: unpub-api
+    #   introspection-client-secret: wfJdcOwhjwlL0TFbouOWfv0beSFkaXSd
