@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:angular/angular.dart';
 import 'package:http/http.dart' as http;
-import 'package:angular/core.dart';
 import 'package:unpub_web/constants.dart';
 import 'src/routes.dart';
 import 'package:unpub_api/models.dart';
