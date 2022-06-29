@@ -32,7 +32,7 @@ class UnpubVersion {
   Map<String, dynamic> toJson() => _$UnpubVersionToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class UnpubPackage {
   final String name;
   final List<UnpubVersion> versions;
@@ -61,7 +61,7 @@ class UnpubPackage {
       _$UnpubPackageFromJson(map);
 }
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class UnpubQueryResult {
   int count;
   List<UnpubPackage> packages;

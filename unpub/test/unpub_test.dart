@@ -48,16 +48,18 @@ main() {
   group('publish', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
     test('fresh', () async {
       var version = '0.0.1';
-
+      
       var result = await pubPublish(package0, version);
       expect(result.stderr, '');
 
@@ -112,18 +114,19 @@ main() {
     test('no readme and changelog', () async {
       var version = '1.0.0-noreadme';
       var result = await pubPublish(package0, version);
-      // expect(result.stderr, ''); // Suggestions:
+      expect(result.stderr, 'Package validation found the following potential issues:\n'
+          '* Please add a README.md file that describes your package.\n'
+          '* Please add a `CHANGELOG.md` to your package. See https://dart.dev/tools/pub/publishing#important-files.\n'); // Suggestions:
 
       var meta = await _readMeta(package0);
 
       expect(meta['name'], package0);
       expect(meta['uploaders'], [email0]);
       expect(meta['versions'], isList);
-      expect(meta['versions'], hasLength(3));
-      expect(meta['versions'][0]['version'], '0.0.1');
-      expect(meta['versions'][1]['version'], '0.0.3');
+      expect(meta['versions'], hasLength(1));
+      expect(meta['versions'][0]['version'], '1.0.0-noreadme');
 
-      var item = meta['versions'][2];
+      var item = meta['versions'][0];
       expect(item['createdAt'], isA<DateTime>());
       item.remove('createdAt');
       expect(
@@ -142,12 +145,14 @@ main() {
   group('get versions', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
       await pubPublish(package0, '0.0.2');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -205,12 +210,14 @@ main() {
   group('get specific version', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
       await pubPublish(package0, '0.0.3+1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -270,11 +277,13 @@ main() {
   group('uploader', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
@@ -328,11 +337,12 @@ main() {
 
     group('permission', () {
       setUpAll(() async {
-        await _server.close();
-        _server = await createServer(email1);
+        await pubRemoveToken();
+        await pubAddToken(token('0', email1));
       });
 
       tearDownAll(() async {
+        await pubRemoveToken();
         await _server.close();
       });
 
@@ -351,11 +361,13 @@ main() {
   group('badge', () {
     setUpAll(() async {
       await _cleanUpDb();
-      _server = await createServer(email0);
+      _server = await createServer();
+      await pubAddToken(token('0', email0));
       await pubPublish(package0, '0.0.1');
     });
 
     tearDownAll(() async {
+      await pubRemoveToken();
       await _server.close();
     });
 
