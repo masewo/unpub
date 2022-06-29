@@ -76,3 +76,30 @@ class WebapiDetailView {
 
   Map<String, dynamic> toJson() => _$WebapiDetailViewToJson(this);
 }
+
+@JsonSerializable()
+class Tokens {
+  List<Token> tokens;
+
+  Tokens(this.tokens);
+
+  factory Tokens.fromJson(Map<String, dynamic> map) =>
+      _$TokensFromJson(map);
+
+  Map<String, dynamic> toJson() => _$TokensToJson(this);
+}
+
+@JsonSerializable()
+class Token {
+  String note;
+  String expiration;
+  String scope;
+  String value;
+
+  Token(this.note, this.expiration, this.scope, this.value);
+
+  factory Token.fromJson(Map<String, dynamic> map) =>
+      _$TokenFromJson(map);
+
+  Map<String, dynamic> toJson() => _$TokenToJson(this);
+}
