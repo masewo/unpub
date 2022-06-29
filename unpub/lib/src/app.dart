@@ -117,16 +117,26 @@ class App {
     return info.email!;
   }
 
-  Future<HttpServer> serve([String host = '0.0.0.0', int port = 4000]) async {
-    var handler = const shelf.Pipeline()
-        .addMiddleware(corsHeaders())
-        .addMiddleware(shelf.logRequests())
-        .addHandler((req) async {
+  Future<HttpServer> serve([
+    String host = '0.0.0.0',
+    int port = 4000,
+    List<shelf.Handler> additionalHandler = const [],
+  ]) async {
+    var cascade = shelf.Cascade().add((req) async {
       // Return 404 by default
       // https://github.com/google/dart-neats/issues/1
       var res = await router.call(req);
       return res;
     });
+
+    for (var h in additionalHandler) {
+      cascade = cascade.add(h);
+    }
+
+    var handler = const shelf.Pipeline()
+        .addMiddleware(corsHeaders())
+        .addMiddleware(shelf.logRequests())
+        .addHandler(cascade.handler);
     var server = await shelf_io.serve(handler, host, port);
     return server;
   }
