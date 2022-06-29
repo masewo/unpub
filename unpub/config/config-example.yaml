@@ -1,0 +1,15 @@
+strict-auth: true
+auth-provider:
+  type: google
+  config:
+    google:
+      audiences:
+        - 
+    oidc:
+      issuer-uri: 
+      jwt:
+        audiences:
+          - 
+      opaque:
+        introspection-client-id: 
+        introspection-client-secret: 

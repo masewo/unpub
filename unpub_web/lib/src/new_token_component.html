@@ -1,0 +1,60 @@
+<div class="container">
+    <br>
+    <h1>New personal access token</h1>
+    <br>
+
+    <form (ngSubmit)="onSubmit()" #heroForm="ngForm">
+        <div class="form-group">
+            <label for="note">Note&nbsp;*</label>
+            <input type="text" class="form-control" id="note" required
+                   [(ngModel)]="model.note"
+                   #note="ngForm"
+                   [class.is-valid]="note.valid"
+                   [class.is-invalid]="!note.valid && !note.pristine"
+                   ngControl="note">
+            <div [hidden]="note.valid || note.pristine" class="invalid-feedback">
+                Note is required
+            </div>
+            <div class="valid-feedback {{note.valid || note.pristine ? 'd-block' : ''}}">
+                &nbsp;
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expiration">Expiration&nbsp;*</label>
+            <select class="form-control" id="expiration" required
+                    [(ngModel)]="model.expiration"
+                    #expiration="ngForm"
+                    [ngClass]="setCssValidityClass(expiration)"
+                    ngControl="expiration">
+                <option *ngFor="let p of expirations" [value]="p">{{p}}</option>
+            </select>
+            <div class="valid-feedback">
+                &nbsp;
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="note">Select scopes&nbsp;*</label>
+            <br>
+            <div *ngFor="let scope of scopes">
+                <input type="checkbox"
+                       [id]="scope"
+                       [checked]="requiredScopes.contains(scope)"
+                       [disabled]="requiredScopes.contains(scope)"
+                       (change)="onChange(scope, $event.target.checked)"/>
+                <label>{{ scope }}</label>
+            </div>
+            <br>
+        </div>
+
+        <div class="row">
+            <div class="col-auto">
+                <button [disabled]="!heroForm.form.valid" type="submit" class="btn btn-primary">
+                    Generate token
+                </button>
+            </div>
+            <small class="col d-flex align-items-center justify-content-left">*&nbsp;Required</small>
+        </div>
+    </form>
+</div>

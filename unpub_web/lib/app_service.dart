@@ -14,13 +14,30 @@ class PackageNotExistsException implements Exception {
 class AppService {
   bool loading = false;
   String keyword = '';
+  String token;
+
+  String getAndClearToken() {
+    var _token = token;
+    token = null;
+    return _token;
+  }
+
+  void clearToken() {
+    token = null;
+  }
+
+  void setToken(String _token) {
+    token = _token;
+  }
 
   void setLoading(bool value) {
     loading = value;
   }
 
   Future _fetch(String path,
-      [Map<String, dynamic> queryParameters = const {}]) async {
+      [Map<String, dynamic> queryParameters = const {},
+        String method = 'GET',
+        Object body]) async {
     queryParameters.entries
         .where((entry) => entry.value == null)
         .toList()
@@ -31,7 +48,16 @@ class AppService {
       path: path,
       queryParameters: queryParameters.map((k, v) => MapEntry(k, v.toString())),
     );
-    var res = await http.get(uri);
+
+    http.Response res;
+    if (method == 'GET') {
+      res = await http.get(uri);
+    } else if (method == 'POST') {
+      res = await http.post(uri, body: json.encode(body));
+    } else {
+      throw 'Method $method not supported.';
+    }
+
     var data = json.decode(res.body);
 
     if (data['error'] != null) {
@@ -56,6 +82,17 @@ class AppService {
     version = version ?? 'latest';
     var res = await _fetch('/webapi/package/$name/$version');
     return WebapiDetailView.fromJson(res);
+  }
+
+  Future<Tokens> fetchTokens() async {
+    var res = await _fetch('/webapi/token');
+    print(res);
+    return Tokens.fromJson(res);
+  }
+
+  Future<Token> createToken(Token token) async {
+    var res = await _fetch('/webapi/token', {}, 'POST', token.toJson());
+    return Token.fromJson(res);
   }
 
   getDetailUrl(package) {

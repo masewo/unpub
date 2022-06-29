@@ -1,0 +1,27 @@
+<main *ngIf="data != null">
+    <div class="container">
+        <br>
+        <h1>Personal access tokens</h1>
+        <br>
+        <div class="row">
+            <div class="col d-flex align-items-center justify-content-left">Tokens you have generated that can be used to access the PubDev API.
+            </div>
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-primary" [routerLink]="'tokens/new'">
+                    Generate new token
+                </button>
+            </div>
+        </div>
+        <div>
+            <br>
+            <div *ngIf="token != null">
+                <div>Make sure to copy your personal access token now. You won’t be able to see it again!<br></div>
+                <div>New token: {{token}}<br><br></div>
+            </div>
+            <div class="tokens" *ngFor="let t of data.tokens">
+                {{t.note}}
+            </div>
+            <br>
+        </div>
+    </div>
+</main>

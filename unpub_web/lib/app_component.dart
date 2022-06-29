@@ -1,4 +1,3 @@
-import 'dart:html' as html;
 import 'package:angular/angular.dart';
 import 'package:angular_router/angular_router.dart';
 import 'package:angular_forms/angular_forms.dart';
@@ -11,7 +10,10 @@ import 'app_service.dart';
   templateUrl: 'app_component.html',
   directives: [routerDirectives, coreDirectives, formDirectives],
   exports: [RoutePaths, Routes],
-  providers: [ClassProvider(AppService)],
+  providers: [
+    ClassProvider(AppService),
+    routerProvidersHash, // avoids routing not working: https://stackoverflow.com/a/41965116/3918817
+  ],
 )
 class AppComponent {
   final AppService appService;
@@ -19,10 +21,11 @@ class AppComponent {
   AppComponent(this.appService, this._router);
 
   submit() async {
-    if (appService.keyword == '') {
-      return html.window.alert('keyword empty');
-    }
-    var result = await _router.navigate(RoutePaths.list.toUrl(),
+    // if (appService.keyword == '') {
+    //   return html.window.alert('keyword empty');
+    // }
+    //var result =
+    await _router.navigate(RoutePaths.list.toUrl(),
         NavigationParams(queryParameters: {'q': appService.keyword}));
     // print(result);
   }

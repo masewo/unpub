@@ -3,6 +3,8 @@ import 'package:angular_router/angular_router.dart';
 import 'home_component.template.dart' as home_template;
 import 'list_component.template.dart' as list_template;
 import 'detail_component.template.dart' as detail_template;
+import 'token_component.template.dart' as token_template;
+import 'new_token_component.template.dart' as new_token_template;
 // import 'not_found_component.template.dart' as not_found_template;
 
 class RoutePaths {
@@ -11,6 +13,8 @@ class RoutePaths {
   static final detail = RoutePath(path: 'packages/:name');
   static final detailVersion =
       RoutePath(path: 'packages/:name/versions/:version');
+  static final tokens = RoutePath(path: 'tokens');
+  static final newToken = RoutePath(path: 'tokens/new');
 }
 
 class Routes {
@@ -30,11 +34,21 @@ class Routes {
     routePath: RoutePaths.detailVersion,
     component: detail_template.DetailComponentNgFactory,
   );
+  static final tokens = RouteDefinition(
+  routePath: RoutePaths.tokens,
+  component: token_template.TokenComponentNgFactory,
+  );
+  static final newToken = RouteDefinition(
+    routePath: RoutePaths.newToken,
+    component: new_token_template.NewTokenComponentNgFactory,
+  );
 
   static final all = <RouteDefinition>[
     home,
     list,
     detail,
+    tokens,
+    newToken,
     // RouteDefinition.redirect(
     //   path: '',
     //   redirectTo: RoutePaths.heroes.toUrl(),

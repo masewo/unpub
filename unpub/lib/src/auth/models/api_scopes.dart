@@ -1,0 +1,4 @@
+enum ApiScope {
+  read,
+  write,
+}
