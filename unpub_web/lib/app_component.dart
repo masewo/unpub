@@ -11,7 +11,10 @@ import 'app_service.dart';
   templateUrl: 'app_component.html',
   directives: [routerDirectives, coreDirectives, formDirectives],
   exports: [RoutePaths, Routes],
-  providers: [ClassProvider(AppService)],
+  providers: [
+    ClassProvider(AppService),
+    routerProvidersHash, // avoids routing not working: https://stackoverflow.com/a/41965116/3918817
+  ],
 )
 class AppComponent {
   final AppService appService;
