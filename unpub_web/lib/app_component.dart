@@ -22,10 +22,11 @@ class AppComponent {
   AppComponent(this.appService, this._router);
 
   submit() async {
-    if (appService.keyword == '') {
-      return html.window.alert('keyword empty');
-    }
-    var result = await _router.navigate(RoutePaths.list.toUrl(),
+    // if (appService.keyword == '') {
+    //   return html.window.alert('keyword empty');
+    // }
+    //var result =
+    await _router.navigate(RoutePaths.list.toUrl(),
         NavigationParams(queryParameters: {'q': appService.keyword}));
     // print(result);
   }
