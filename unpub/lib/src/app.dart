@@ -529,6 +529,29 @@ class App {
     return _okWithJson({'data': data.toJson()});
   }
 
+  List<Token> tokens = [
+    Token('test-note', 'in-the-future', 'example-scopes', 'example-token-value')
+  ];
+
+  @Route.get('/webapi/token')
+  Future<shelf.Response> getToken(shelf.Request req) async {
+    // TODO: remove the token values before responding
+
+    return _okWithJson({'data': Tokens(tokens).toJson()});
+  }
+
+  @Route.post('/webapi/token')
+  Future<shelf.Response> createToken(shelf.Request req) async {
+    var bodyString = await req.readAsString();
+    var body = json.decode(bodyString);
+
+    // TODO: save also created_at date for sorting
+    var token = Token(body['note'], '', '', 'value for ${body['note']}');
+    tokens.add(token);
+
+    return _okWithJson({'data': token.toJson()});
+  }
+
   @Route.get('/')
   @Route.get('/packages')
   @Route.get('/packages/<name>')

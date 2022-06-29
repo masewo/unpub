@@ -24,6 +24,8 @@ Router _$AppRouter(App service) {
   router.add('GET', r'/packages/<name>.json', service.getPackageVersions);
   router.add(
       'GET', r'/webapi/package/<name>/<version>', service.getPackageDetail);
+  router.add('GET', r'/webapi/token', service.getToken);
+  router.add('POST', r'/webapi/token', service.createToken);
   router.add('GET', r'/', service.indexHtml);
   router.add('GET', r'/packages', service.indexHtml);
   router.add('GET', r'/packages/<name>', service.indexHtml);
