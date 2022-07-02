@@ -17,7 +17,7 @@ class TokenComponent implements OnActivate, OnDeactivate {
   TokenComponent(this.appService);
 
   String token;
-  Tokens data;
+  WebApiTokens data;
 
   @override
   void onActivate(RouterState previous, RouterState current) {

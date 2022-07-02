@@ -84,15 +84,15 @@ class AppService {
     return WebapiDetailView.fromJson(res);
   }
 
-  Future<Tokens> fetchTokens() async {
+  Future<WebApiTokens> fetchTokens() async {
     var res = await _fetch('/webapi/token');
     print(res);
-    return Tokens.fromJson(res);
+    return WebApiTokens.fromJson(res);
   }
 
-  Future<Token> createToken(Token token) async {
+  Future<String> createToken(WebApiToken token) async {
     var res = await _fetch('/webapi/token', {}, 'POST', token.toJson());
-    return Token.fromJson(res);
+    return res;
   }
 
   getDetailUrl(package) {

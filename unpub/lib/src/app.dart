@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -9,6 +10,9 @@ import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:pub_semver/pub_semver.dart' as semver;
 import 'package:archive/archive.dart';
+import 'package:unpub/src/auth/models/token.dart';
+import 'package:unpub/src/auth/models/token_scope.dart';
+import 'package:unpub/src/auth/models/user.dart';
 import 'package:unpub/src/middlewares/auth_middleware.dart';
 import 'package:unpub/src/auth/providers/auth_provider.dart';
 import 'package:unpub/src/auth/route_auth.dart';
@@ -231,6 +235,11 @@ class App {
   Future<shelf.Response> upload(shelf.Request req) async {
     try {
       var uploader = req.authResult.email!;
+      var scope = req.authResult.scopes;
+
+      if (!scope.contains('write')) {
+        return _badRequest('Token has no write permission.');
+      }
 
       var contentType = req.headers['content-type'];
       if (contentType == null) throw 'invalid content type';
@@ -359,6 +368,12 @@ class App {
     var body = await req.readAsString();
     var email = Uri.splitQueryString(body)['email']!; // TODO: null
     var operatorEmail = req.authResult.email!;
+    var scope = req.authResult.scopes;
+
+    if (!scope.contains('write')) {
+      return _badRequest('Token has no write permission.');
+    }
+
     var package = await metaStore.queryPackage(name);
 
     if (package?.uploaders?.contains(operatorEmail) == false) {
@@ -378,6 +393,12 @@ class App {
       shelf.Request req, String name, String email) async {
     email = Uri.decodeComponent(email);
     var operatorEmail = req.authResult.email!;
+    var scope = req.authResult.scopes;
+
+    if (!scope.contains('write')) {
+      return _badRequest('Token has no write permission.');
+    }
+
     var package = await metaStore.queryPackage(name);
 
     // TODO: null
@@ -521,29 +542,116 @@ class App {
     return _okWithJson({'data': data.toJson()});
   }
 
-  List<Token> tokens = [
-    Token('test-note', 'in-the-future', 'example-scopes', 'example-token-value')
-  ];
-
-  // TODO: Auth?
+  @Auth.always
   @Route.get('/webapi/token')
   Future<shelf.Response> getToken(shelf.Request req) async {
-    // TODO: remove the token values before responding
+    var userId = req.authResult.userId;
 
-    return _okWithJson({'data': Tokens(tokens).toJson()});
+    if (userId == null) {
+      return _badRequest('Could not find user id in token.');
+    }
+
+    var tokens = await authProvider.userStore.getTokens(userId);
+
+    if (tokens == null) {
+      return _badRequest('No tokens found.');
+    }
+
+    tokens.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    var webApiTokens = tokens
+        .map((t) => WebApiToken(
+            t.note, t.expiresAt.toIso8601String(), t.scope.join(' ')))
+        .toList();
+
+    return _okWithJson({'data': WebApiTokens(webApiTokens).toJson()});
   }
 
-  // TODO: Auth?
+  @Auth.always
   @Route.post('/webapi/token')
   Future<shelf.Response> createToken(shelf.Request req) async {
     var bodyString = await req.readAsString();
     var body = json.decode(bodyString);
 
-    // TODO: save also created_at date for sorting
-    var token = Token(body['note'], '', '', 'value for ${body['note']}');
-    tokens.add(token);
+    var userId = req.authResult.userId;
+    if (userId == null) {
+      return _badRequest('Could not find user id in token.');
+    }
 
-    return _okWithJson({'data': token.toJson()});
+    User? user = await tokenAuthProvider.userStore.findById(userId);
+    if (user == null) {
+      var email = req.authResult.email;
+
+      if (email == null) {
+        return _badRequest('Could not find user email in token.');
+      }
+
+      await tokenAuthProvider.userStore.add(User(userId, email));
+    }
+
+    var note = body['note'];
+    var tokens = await tokenAuthProvider.userStore.getTokens(userId);
+
+    if (tokens != null) {
+      var alreadyExists = tokens.map((e) => e.note).contains(note);
+      if (alreadyExists) {
+        return _badRequest('A token with this note already exists.');
+      }
+    }
+
+    var token = _getBase64RandomString(36);
+
+    var createdAt = DateTime.now();
+    var expiresAt;
+    switch (body['expiresIn']) {
+      case '7 days':
+        expiresAt = createdAt.add(Duration(days: 7));
+        break;
+      case '30 days':
+        expiresAt = createdAt.add(Duration(days: 30));
+        break;
+      case '60 days':
+        expiresAt = createdAt.add(Duration(days: 60));
+        break;
+      case '90 days':
+        expiresAt = createdAt.add(Duration(days: 90));
+        break;
+      case '1 year':
+        expiresAt = createdAt.add(Duration(days: 365));
+        break;
+      default:
+        expiresAt = createdAt.add(Duration(days: 7));
+        break;
+    }
+
+    String s = body['scope'];
+    var scope = s
+        .split(' ')
+        .map((s) => TokenScope.values.firstWhere((e) => _describeEnum(e) == s))
+        .toList();
+
+    var apiToken = Token(note, userId, token, scope, createdAt, expiresAt);
+
+    tokenAuthProvider.userStore.addToken(userId, apiToken);
+
+    return _okWithJson({'data': token});
+  }
+
+  String _describeEnum(Object enumEntry) {
+    if (enumEntry is Enum) return enumEntry.name;
+    final String description = enumEntry.toString();
+    final int indexOfDot = description.indexOf('.');
+    assert(
+      indexOfDot != -1 && indexOfDot < description.length - 1,
+      'The provided object "$enumEntry" is not an enum.',
+    );
+    return description.substring(indexOfDot + 1);
+  }
+
+  String _getBase64RandomString(int length) {
+    var random = Random.secure();
+    var values = List<int>.generate(length, (i) => random.nextInt(255));
+    return base64UrlEncode(values);
   }
 
   @Auth.anonymous

@@ -6,7 +6,8 @@ import 'package:shelf/shelf.dart';
 import 'package:unpub/src/auth/providers/auth_provider.dart';
 import 'package:unpub/src/auth/route_auth.dart';
 
-Middleware authMiddleware(AuthProvider authProvider, AuthProvider tokenAuthProvider,
+Middleware authMiddleware(
+    AuthProvider authProvider, AuthProvider tokenAuthProvider,
     {bool strictAuth = false, List<RouteAuth> routeOptions = const []}) {
   return (Handler handler) {
     return (Request request) async {
@@ -32,9 +33,9 @@ Middleware authMiddleware(AuthProvider authProvider, AuthProvider tokenAuthProvi
         return _forbidden('Missing authorization header.');
       }
 
-      final authResult = request.url.pathSegments[0] != 'api'
-        ? await authProvider.tryAuthenticate(token)
-        : await tokenAuthProvider.tryAuthenticate(token);
+      final authResult = request.url.pathSegments[0] == 'webapi'
+            ? await authProvider.tryAuthenticate(token)
+            : await tokenAuthProvider.tryAuthenticate(token);
 
       if (authResult == null) {
         return _forbidden('Not authenticated.');
@@ -49,7 +50,11 @@ Middleware authMiddleware(AuthProvider authProvider, AuthProvider tokenAuthProvi
 
 Response _forbidden(String message) => Response(
       HttpStatus.unauthorized,
-      headers: {HttpHeaders.contentTypeHeader: ContentType.json.mimeType},
+      headers: {
+        HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
+        HttpHeaders.wwwAuthenticateHeader:
+            'Bearer realm="pub", message="$message"'
+      },
       body: jsonEncode({
         'error': {'message': message}
       }),

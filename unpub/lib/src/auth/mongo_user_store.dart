@@ -1,7 +1,7 @@
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:unpub/src/auth/models/user.dart';
 import 'package:unpub/src/auth/user_store.dart';
-import 'package:unpub/src/auth/models/api_token.dart';
+import 'package:unpub/src/auth/models/token.dart';
 
 const userCollection = 'users';
 
@@ -16,7 +16,8 @@ class MongoUserStore extends UserStore {
     await _db.createIndex(userCollection, keys: {'id': 1}, unique: true);
     await _db.createIndex(userCollection, keys: {'email': 1}, unique: true);
     await _db.createIndex(userCollection, keys: {'tokens.id': 1}, unique: true);
-    await _db.createIndex(userCollection, keys: {'tokens.token': 1}, unique: true);
+    await _db.createIndex(userCollection,
+        keys: {'tokens.token': 1}, unique: true);
   }
 
   @override
@@ -25,7 +26,7 @@ class MongoUserStore extends UserStore {
   }
 
   @override
-  Future<void> addToken(String userId, ApiToken token) async {
+  Future<void> addToken(String userId, Token token) async {
     await _userCollection.updateOne(
       where.eq('id', userId),
       modify.addToSet('tokens', token.toJson()),
@@ -33,10 +34,21 @@ class MongoUserStore extends UserStore {
   }
 
   @override
+  Future<List<Token>?> getTokens(String userId) async {
+    var user = await _userCollection.findOne(where.eq('id', userId));
+
+    if (user == null || user['tokens'] == null) return null;
+
+    return (user['tokens'] as List)
+        .map((itemWord) => Token.fromJson(itemWord))
+        .toList();
+  }
+
+  @override
   Future<void> deleteToken(String userId, String tokenId) async {
     await _userCollection.updateOne(
       where.eq('id', userId),
-      modify.pull('tokens', {'id': tokenId})
+      modify.pull('tokens', {'id': tokenId}),
     );
   }
 
@@ -74,7 +86,18 @@ class MongoUserStore extends UserStore {
   }
 
   @override
-  Future<List<String>> getTokenScopes(String token) async {
-    throw UnimplementedError();
+  Future<List<String>?> getTokenScopes(String userId, String token) async {
+    final json = await _userCollection.findOne(where.eq('tokens.token', token));
+
+    if (json == null || json['tokens'] == null) {
+      return null;
+    }
+
+    final t = json['tokens'].firstWhere((t) => t['token'] == token);
+    if (t == null || t['scope'] == null) {
+      return null;
+    }
+
+    return (t['scope'] as List).map((itemWord) => itemWord.toString()).toList();
   }
 }

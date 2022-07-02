@@ -1,4 +1,4 @@
-enum ApiScope {
+enum TokenScope {
   read,
   write,
 }

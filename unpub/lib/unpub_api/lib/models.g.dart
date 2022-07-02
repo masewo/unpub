@@ -84,26 +84,24 @@ Map<String, dynamic> _$WebapiDetailViewToJson(WebapiDetailView instance) =>
       'tags': instance.tags,
     };
 
-Tokens _$TokensFromJson(Map<String, dynamic> json) => Tokens(
+WebApiTokens _$WebApiTokensFromJson(Map<String, dynamic> json) => WebApiTokens(
       (json['tokens'] as List<dynamic>)
-          .map((e) => Token.fromJson(e as Map<String, dynamic>))
+          .map((e) => WebApiToken.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$TokensToJson(Tokens instance) => <String, dynamic>{
+Map<String, dynamic> _$WebApiTokensToJson(WebApiTokens instance) => <String, dynamic>{
       'tokens': instance.tokens,
     };
 
-Token _$TokenFromJson(Map<String, dynamic> json) => Token(
+WebApiToken _$WebApiTokenFromJson(Map<String, dynamic> json) => WebApiToken(
       json['note'] as String,
       json['expiration'] as String,
       json['scope'] as String,
-      json['value'] as String,
     );
 
-Map<String, dynamic> _$TokenToJson(Token instance) => <String, dynamic>{
+Map<String, dynamic> _$WebApiTokenToJson(WebApiToken instance) => <String, dynamic>{
       'note': instance.note,
       'expiration': instance.expiration,
       'scope': instance.scope,
-      'value': instance.value,
     };

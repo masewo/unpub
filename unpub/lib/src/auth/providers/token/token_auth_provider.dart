@@ -13,7 +13,11 @@ class TokenAuthProvider extends AuthProvider {
       return null;
     }
 
-    final scopes = await userStore.getTokenScopes(token);
+    final scopes = await userStore.getTokenScopes(user.id, token);
+
+    if (scopes == null) {
+      return null;
+    }
 
     return AuthResult(user.id, user.email, scopes);
   }

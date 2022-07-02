@@ -1,25 +1,29 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'api_token.dart';
+part of 'token.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ApiToken _$ApiTokenFromJson(Map<String, dynamic> json) => ApiToken(
-      json['id'] as String,
+Token _$TokenFromJson(Map<String, dynamic> json) => Token(
+      json['note'] as String,
       json['userId'] as String,
       json['token'] as String,
-      (json['scopes'] as List<dynamic>)
-          .map((e) => _$enumDecode(_$ApiScopeEnumMap, e))
+      (json['scope'] as List<dynamic>)
+          .map((e) => _$enumDecode(_$TokenScopeEnumMap, e))
           .toList(),
+      identity(json['createdAt'] as DateTime),
+      identity(json['expiresAt'] as DateTime),
     );
 
-Map<String, dynamic> _$ApiTokenToJson(ApiToken instance) => <String, dynamic>{
-      'id': instance.id,
+Map<String, dynamic> _$TokenToJson(Token instance) => <String, dynamic>{
+      'note': instance.note,
       'userId': instance.userId,
       'token': instance.token,
-      'scopes': instance.scopes.map((e) => _$ApiScopeEnumMap[e]).toList(),
+      'scope': instance.scope.map((e) => _$TokenScopeEnumMap[e]).toList(),
+      'createdAt': identity(instance.createdAt),
+      'expiresAt': identity(instance.expiresAt),
     };
 
 K _$enumDecode<K, V>(
@@ -48,7 +52,7 @@ K _$enumDecode<K, V>(
   ).key;
 }
 
-const _$ApiScopeEnumMap = {
-  ApiScope.read: 'read',
-  ApiScope.write: 'write',
+const _$TokenScopeEnumMap = {
+  TokenScope.read: 'read',
+  TokenScope.write: 'write',
 };

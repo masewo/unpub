@@ -78,28 +78,27 @@ class WebapiDetailView {
 }
 
 @JsonSerializable()
-class Tokens {
-  List<Token> tokens;
+class WebApiTokens {
+  List<WebApiToken> tokens;
 
-  Tokens(this.tokens);
+  WebApiTokens(this.tokens);
 
-  factory Tokens.fromJson(Map<String, dynamic> map) =>
-      _$TokensFromJson(map);
+  factory WebApiTokens.fromJson(Map<String, dynamic> map) =>
+      _$WebApiTokensFromJson(map);
 
-  Map<String, dynamic> toJson() => _$TokensToJson(this);
+  Map<String, dynamic> toJson() => _$WebApiTokensToJson(this);
 }
 
 @JsonSerializable()
-class Token {
+class WebApiToken {
   String note;
   String expiration;
   String scope;
-  String value;
 
-  Token(this.note, this.expiration, this.scope, this.value);
+  WebApiToken(this.note, this.expiration, this.scope);
 
-  factory Token.fromJson(Map<String, dynamic> map) =>
-      _$TokenFromJson(map);
+  factory WebApiToken.fromJson(Map<String, dynamic> map) =>
+      _$WebApiTokenFromJson(map);
 
-  Map<String, dynamic> toJson() => _$TokenToJson(this);
+  Map<String, dynamic> toJson() => _$WebApiTokenToJson(this);
 }

@@ -26,7 +26,7 @@ class NewTokenComponent {
 
   NewTokenComponent(this._router, this.appService);
 
-  Token model = Token('', _expirations[1], 'read', null);
+  WebApiToken model = WebApiToken('', _expirations[1], 'read');
   bool submitted = false;
 
   List<String> get expirations => _expirations;
@@ -39,9 +39,9 @@ class NewTokenComponent {
   }
 
   void _createToken() async {
-    Token token = await appService.createToken(model);
+    String token = await appService.createToken(model);
 
-    appService.setToken(token.value);
+    appService.setToken(token);
     _gotoTokens();
   }
 
