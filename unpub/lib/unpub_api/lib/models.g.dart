@@ -90,7 +90,8 @@ WebApiTokens _$WebApiTokensFromJson(Map<String, dynamic> json) => WebApiTokens(
           .toList(),
     );
 
-Map<String, dynamic> _$WebApiTokensToJson(WebApiTokens instance) => <String, dynamic>{
+Map<String, dynamic> _$WebApiTokensToJson(WebApiTokens instance) =>
+    <String, dynamic>{
       'tokens': instance.tokens,
     };
 
@@ -100,7 +101,8 @@ WebApiToken _$WebApiTokenFromJson(Map<String, dynamic> json) => WebApiToken(
       json['scope'] as String,
     );
 
-Map<String, dynamic> _$WebApiTokenToJson(WebApiToken instance) => <String, dynamic>{
+Map<String, dynamic> _$WebApiTokenToJson(WebApiToken instance) =>
+    <String, dynamic>{
       'note': instance.note,
       'expiration': instance.expiration,
       'scope': instance.scope,

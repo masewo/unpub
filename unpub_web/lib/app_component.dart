@@ -12,7 +12,7 @@ import 'app_service.dart';
   exports: [RoutePaths, Routes],
   providers: [
     ClassProvider(AppService),
-    routerProvidersHash, // avoids routing not working: https://stackoverflow.com/a/41965116/3918817
+    // routerProvidersHash, // avoids routing not working in dev mode: https://stackoverflow.com/a/41965116/3918817
   ],
 )
 class AppComponent {

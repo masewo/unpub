@@ -659,6 +659,8 @@ class App {
   @Route.get('/packages')
   @Route.get('/packages/<name>')
   @Route.get('/packages/<name>/versions/<version>')
+  @Route.get('/tokens')
+  @Route.get('/tokens/new')
   Future<shelf.Response> indexHtml(shelf.Request req) async {
     return shelf.Response.ok(index_html.content,
         headers: {HttpHeaders.contentTypeHeader: ContentType.html.mimeType});

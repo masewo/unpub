@@ -35,8 +35,8 @@ class Routes {
     component: detail_template.DetailComponentNgFactory,
   );
   static final tokens = RouteDefinition(
-  routePath: RoutePaths.tokens,
-  component: token_template.TokenComponentNgFactory,
+    routePath: RoutePaths.tokens,
+    component: token_template.TokenComponentNgFactory,
   );
   static final newToken = RouteDefinition(
     routePath: RoutePaths.newToken,

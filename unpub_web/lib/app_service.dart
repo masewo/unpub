@@ -86,7 +86,6 @@ class AppService {
 
   Future<WebApiTokens> fetchTokens() async {
     var res = await _fetch('/webapi/token');
-    print(res);
     return WebApiTokens.fromJson(res);
   }
 
