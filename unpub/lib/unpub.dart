@@ -4,3 +4,8 @@ export 'src/package_store.dart';
 export 'src/file_store.dart';
 export 'src/app.dart';
 export 'src/models.dart';
+export 'src/auth/mongo_user_store.dart';
+export 'src/auth/providers/auth_provider.dart';
+export 'src/auth/providers/oidc/oidc_auth_config.dart';
+export 'src/auth/providers/oidc/oidc_auth_provider.dart';
+export 'src/auth/providers/token/token_auth_provider.dart';
