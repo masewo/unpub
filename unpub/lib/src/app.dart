@@ -15,8 +15,7 @@ import 'package:unpub/src/auth/models/token_scope.dart';
 import 'package:unpub/src/auth/models/user.dart';
 import 'package:unpub/src/middlewares/auth_middleware.dart';
 import 'package:unpub/src/auth/providers/auth_provider.dart';
-import 'package:unpub/src/auth/route_auth.dart';
-import 'package:unpub/src/auth/route_auth_finder.dart';
+import 'package:route_auth/route_auth.dart';
 import 'package:unpub/src/extensions.dart';
 import 'package:unpub/src/models.dart';
 import 'package:unpub/unpub_api/lib/models.dart';
@@ -104,13 +103,11 @@ class App {
     int port = 4000,
     bool strictAuth = false,
   ]) async {
-    final routeOptions = findRouteAuthsFromDeclarations(App);
-
     var handler = const shelf.Pipeline()
         .addMiddleware(corsHeaders())
         .addMiddleware(shelf.logRequests())
         .addMiddleware(authMiddleware(authProvider, tokenAuthProvider,
-            strictAuth: strictAuth, routeOptions: routeOptions))
+            strictAuth: strictAuth, routeOptions: routeAuth))
         .addHandler((req) async {
       // Return 404 by default
       // https://github.com/google/dart-neats/issues/1
@@ -140,6 +137,7 @@ class App {
   }
 
   Router get router => _$AppRouter(this);
+  List<RouteAuth> get routeAuth => _$AppAuth();
 
   @Auth.configurable
   @Route.get('/api/packages/<name>')

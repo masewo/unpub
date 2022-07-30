@@ -3,6 +3,41 @@
 part of 'app.dart';
 
 // **************************************************************************
+// RouteAuthGenerator
+// **************************************************************************
+
+List<RouteAuth> _$AppAuth() {
+  final authList = <RouteAuth>[];
+  authList.add(RouteAuth.configurable('GET', r'/api/packages/<name>'));
+  authList.add(RouteAuth.configurable(
+      'GET', r'/api/packages/<name>/versions/<version>'));
+  authList.add(RouteAuth.anonymous(
+      'GET', r'/packages/<name>/versions/<version>.tar.gz'));
+  authList.add(RouteAuth.always('GET', r'/api/packages/versions/new'));
+  authList.add(RouteAuth.always('POST', r'/api/packages/versions/newUpload'));
+  authList
+      .add(RouteAuth.always('GET', r'/api/packages/versions/newUploadFinish'));
+  authList.add(RouteAuth.always('POST', r'/api/packages/<name>/uploaders'));
+  authList.add(
+      RouteAuth.always('DELETE', r'/api/packages/<name>/uploaders/<email>'));
+  authList.add(RouteAuth.configurable('GET', r'/webapi/packages'));
+  authList
+      .add(RouteAuth.configurable('GET', r'/webapi/package/<name>/<version>'));
+  authList.add(RouteAuth.always('GET', r'/webapi/token'));
+  authList.add(RouteAuth.always('POST', r'/webapi/token'));
+  authList.add(RouteAuth.anonymous('GET', r'/'));
+  authList.add(RouteAuth.anonymous('GET', r'/packages'));
+  authList.add(RouteAuth.anonymous('GET', r'/packages/<name>'));
+  authList
+      .add(RouteAuth.anonymous('GET', r'/packages/<name>/versions/<version>'));
+  authList.add(RouteAuth.anonymous('GET', r'/tokens'));
+  authList.add(RouteAuth.anonymous('GET', r'/tokens/new'));
+  authList.add(RouteAuth.anonymous('GET', r'/main.dart.js'));
+  authList.add(RouteAuth.anonymous('GET', r'/badge/<type>/<name>'));
+  return authList;
+}
+
+// **************************************************************************
 // ShelfRouterGenerator
 // **************************************************************************
 

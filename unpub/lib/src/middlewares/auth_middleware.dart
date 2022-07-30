@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:shelf/shelf.dart';
 import 'package:unpub/src/auth/providers/auth_provider.dart';
-import 'package:unpub/src/auth/route_auth.dart';
+import 'package:route_auth/route_auth.dart';
 
 Middleware authMiddleware(
     AuthProvider authProvider, AuthProvider tokenAuthProvider,
