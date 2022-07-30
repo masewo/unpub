@@ -102,12 +102,15 @@ class App {
     String host = '0.0.0.0',
     int port = 4000,
     bool strictAuth = false,
+    String authorizationHeader = HttpHeaders.authorizationHeader,
   ]) async {
     var handler = const shelf.Pipeline()
         .addMiddleware(corsHeaders())
         .addMiddleware(shelf.logRequests())
         .addMiddleware(authMiddleware(authProvider, tokenAuthProvider,
-            strictAuth: strictAuth, routeOptions: routeAuth))
+            strictAuth: strictAuth,
+            routeOptions: routeAuth,
+            authorizationHeader: authorizationHeader))
         .addHandler((req) async {
       // Return 404 by default
       // https://github.com/google/dart-neats/issues/1
@@ -137,6 +140,7 @@ class App {
   }
 
   Router get router => _$AppRouter(this);
+
   List<RouteAuth> get routeAuth => _$AppAuth();
 
   @Auth.configurable

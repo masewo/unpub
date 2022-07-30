@@ -8,7 +8,9 @@ import 'package:route_auth/route_auth.dart';
 
 Middleware authMiddleware(
     AuthProvider authProvider, AuthProvider tokenAuthProvider,
-    {bool strictAuth = false, List<RouteAuth> routeOptions = const []}) {
+    {bool strictAuth = false,
+    List<RouteAuth> routeOptions = const [],
+    String authorizationHeader = HttpHeaders.authorizationHeader}) {
   return (Handler handler) {
     return (Request request) async {
       final routeOption = routeOptions.firstWhereOrNull(
@@ -26,7 +28,7 @@ Middleware authMiddleware(
         return handler(request);
       }
 
-      final authHeader = request.headers[HttpHeaders.authorizationHeader];
+      final authHeader = request.headers[authorizationHeader];
       final token = authHeader?.replaceFirst('Bearer ', '');
 
       if (token == null) {
@@ -34,8 +36,8 @@ Middleware authMiddleware(
       }
 
       final authResult = request.url.pathSegments[0] == 'webapi'
-            ? await authProvider.tryAuthenticate(token)
-            : await tokenAuthProvider.tryAuthenticate(token);
+          ? await authProvider.tryAuthenticate(token)
+          : await tokenAuthProvider.tryAuthenticate(token);
 
       if (authResult == null) {
         return _forbidden('Not authenticated.');
