@@ -5,7 +5,7 @@ import 'package:jose/jose.dart';
 import 'package:unpub/src/auth/providers/auth_provider.dart';
 import 'package:unpub/src/auth/models/auth_result.dart';
 import 'package:unpub/src/auth/providers/oidc/oidc_auth_config.dart';
-import 'package:unpub/src/auth/providers/oidc/user_info.dart';
+import 'package:unpub/src/auth/providers/user_info.dart';
 import 'package:unpub/src/auth/user_store.dart';
 
 class OidcAuthProvider extends AuthProvider {
